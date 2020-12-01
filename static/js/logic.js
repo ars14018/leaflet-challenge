@@ -8,55 +8,54 @@ d3.json(url)
         createFeatures(data.features);
     });
 
+// Function to determine marker size based on magnitude. 
+// Earthquakes with higher magnitude should appear larger in size. 
+function markerSize(circle) {
+    return circle * 5;
+}
+
+
+//Fucntion to determine color of marker size based on magnitue.
+// Earthquakes with higher magnitude should appear darker in color.
+function chooseColor(mag) {
+    if (mag > 5) { return "darkred" }
+    else if (mag > 4) { return "red" }
+    else if (mag > 3) { return "orange" }
+    else if (mag > 2) { return "yellow" }
+    else if (mag > 1) { return "limegreen" }
+    else { return "green" }
+}
+
 function createFeatures(earthquakeData) {
     //Give feature a popup describing the magnitude, place, and time of the earthquake 
     function onEachFeature(feature, layer) {
-        layer.bindPopup("Magnitude:" +  feature.properties.mag + "<br>Location:" +  feature.properties.place + "<br>Date:" +  new Date(feature.properties.time))
+        layer.bindPopup("Magnitude:" + feature.properties.mag + "<br>Location:" + feature.properties.place + "<br>Date:" + new Date(feature.properties.time))
     }
 
-    // Function to determine marker size based on magnitude. 
-    // Earthquakes with higher magnitude should appear larger in size. 
-    function markerSize(circle) {
-        return circle * 5;
-    }
-
-    //Fucntion to determine color of marker size based on magnitue.
-    // Earthquakes with higher magnitude should appear darker in color.
-    function chooseColor(mag) {
-        if (mag > 5) { return "darkred" }
-        else if (mag > 4) { return "red" }
-        else if (mag > 3) { return "orange" }
-        else if (mag > 2) { return "yellow" }
-        else if (mag > 1) { return "limegreen" }
-        else { return "green" }
-    }
-    
-var earthquakes = L.geoJSON(earthquakeData, {
-    //Create circleMarker
-    pointToLayer: function (feature, latlng) {
-        return L.circleMarker(latlng);
-    },
-    //Style each mag feature 
-    style: function (feature) {
-        console.log(feature.properties.mag)
-        return {
-            fillColor: chooseColor(feature.properties.mag),
-            fillOpacity: 1,
-            weight: 1.5,
-            radius: markerSize(feature.properties.mag),
-            stroke: false
-        }
+    var earthquakes = L.geoJSON(earthquakeData, {
+        //Create circleMarker
+        pointToLayer: function (feature, latlng) {
+            return L.circleMarker(latlng);
+        },
+        //Style each mag feature 
+        style: function (feature) {
+            // console.log(feature.properties.mag)
+            return {
+                fillColor: chooseColor(feature.properties.mag),
+                fillOpacity: 1,
+                weight: 1.5,
+                radius: markerSize(feature.properties.mag),
+                stroke: false
+            }
         },
 
-    onEachFeature: onEachFeature
+        onEachFeature: onEachFeature
     });
 
     createMap(earthquakes);
 }
 
 function createMap(earthquakes) {
-
-   
     //Deinfe satellitte layer 
     var satellite = L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}", {
         attribution: "Map data &copy; <a href=\"https://www.openstreetmap.org/\">OpenStreetMap</a> contributors, <a href=\"https://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA</a>, Imagery © <a href=\"https://www.mapbox.com/\">Mapbox</a>",
@@ -116,42 +115,22 @@ function createMap(earthquakes) {
     L.control.layers(baseMaps, overlayMaps, {
         collapsed: false
     }).addTo(myMap);
+
+    //Create Legend 
+    var legend = L.control({ position: "bottomright" });
+    console.log(L);
+    console.log(legend);
+    legend.onAdd = function () {
+        var div = L.DomUtil.create("div", "info legend");
+        var mag = [0, 1, 2, 3, 4, 5];
+
+        for (var i = 0; i < mag.length; i++) {
+            div.innerHTML +=
+                '<i style="background:' + chooseColor(mag[i] + 1) + '"></i> ' +
+                mag[i] + (mag[i + 1] ? '&ndash;' + mag[i + 1] + '<br>' : '+');
+        }
+
+        return div;
+    };
+    legend.addTo(myMap);
 }
-
-//Create Legend 
-var legend = L.control({ position: "bottomright" });
-legend.onAdd = function (map) {
-    var div = L.DomUtil.create("div", "info legend");
-    var mag = [0, 1, 2, 3, 4, 5];
-
-    for (var i = 0; i < mag.length; i++) {
-        div.innerHTML +=
-            '<i style="background:' + chooseColor(mag[i] + 1) + '"></i> ' +
-            mag[i] + (mag[i + 1] ? '&ndash;' + mag[i + 1] + '<br>' : '+');
-    }
-
-    return div;
-};
-legend.addTo(map);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
